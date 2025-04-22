@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="vi" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Lý Bán Hàng - Microservices</title>
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i data-feather="shopping-cart"></i> Quản Lý Bán Hàng Microservices
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#products">Sản Phẩm</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#orders">Đơn Hàng</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#payments">Thanh Toán</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#shipping">Vận Chuyển</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#health">Trạng Thái</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <h4 class="alert-heading">Hệ Thống Quản Lý Bán Hàng Microservices</h4>
+                    <p>Hệ thống bao gồm các dịch vụ: Payment, Inventory, Shipping và API Gateway.</p>
+                    <hr>
+                    <p class="mb-0">Tất cả các dịch vụ được containerize bằng Docker và áp dụng các pattern fault-tolerant.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="app-container">
+            <!-- Dashboard Stats -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-white bg-primary mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Sản Phẩm</h5>
+                            <h1 class="display-4" id="product-count">--</h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-success mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Đơn Hàng</h5>
+                            <h1 class="display-4" id="order-count">--</h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-warning mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Thanh Toán</h5>
+                            <h1 class="display-4" id="payment-count">--</h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-info mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Vận Chuyển</h5>
+                            <h1 class="display-4" id="shipping-count">--</h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service Health -->
+            <div class="row mb-4" id="health">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Trạng Thái Dịch Vụ</h5>
+                            <button class="btn btn-sm btn-primary" onclick="checkHealth()">
+                                <i data-feather="refresh-cw"></i> Làm mới
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Dịch Vụ</th>
+                                            <th>Trạng Thái</th>
+                                            <th>Chi Tiết</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="health-status">
+                                        <tr>
+                                            <td>API Gateway</td>
+                                            <td><span class="badge bg-secondary">Đang kiểm tra...</span></td>
+                                            <td>-</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Payment Service</td>
+                                            <td><span class="badge bg-secondary">Đang kiểm tra...</span></td>
+                                            <td>-</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Inventory Service</td>
+                                            <td><span class="badge bg-secondary">Đang kiểm tra...</span></td>
+                                            <td>-</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Shipping Service</td>
+                                            <td><span class="badge bg-secondary">Đang kiểm tra...</span></td>
+                                            <td>-</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products Section -->
+            <div class="row mb-4" id="products">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Danh Sách Sản Phẩm</h5>
+                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                                <i data-feather="plus"></i> Thêm Sản Phẩm
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Tên Sản Phẩm</th>
+                                            <th>Giá</th>
+                                            <th>Tồn Kho</th>
+                                            <th>Thao Tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="product-list">
+                                        <tr>
+                                            <td colspan="5" class="text-center">Đang tải dữ liệu...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create Order Section -->
+            <div class="row mb-4" id="orders">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Tạo Đơn Hàng Mới</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="create-order-form">
+                                <div class="mb-3">
+                                    <label for="customer_id" class="form-label">ID Khách Hàng</label>
+                                    <input type="text" class="form-control" id="customer_id" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="shipping_address" class="form-label">Địa Chỉ Giao Hàng</label>
+                                    <textarea class="form-control" id="shipping_address" rows="3" required></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Sản Phẩm</label>
+                                    <div id="order-items">
+                                        <div class="row mb-2">
+                                            <div class="col-md-6">
+                                                <select class="form-select product-select" required>
+                                                    <option value="">Chọn sản phẩm</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <input type="number" class="form-control product-quantity" placeholder="Số lượng" min="1" value="1" required>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <button type="button" class="btn btn-danger remove-item" disabled>Xóa</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-secondary" id="add-item">
+                                        <i data-feather="plus"></i> Thêm Sản Phẩm
+                                    </button>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="payment_method" class="form-label">Phương Thức Thanh Toán</label>
+                                    <select class="form-select" id="payment_method" required>
+                                        <option value="credit_card">Thẻ Tín Dụng</option>
+                                        <option value="bank_transfer">Chuyển Khoản</option>
+                                        <option value="cod">Thanh Toán Khi Nhận Hàng</option>
+                                    </select>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Tổng Tiền</label>
+                                            <h3 id="total-amount">0 VNĐ</h3>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 text-end">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i data-feather="shopping-bag"></i> Tạo Đơn Hàng
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Status Section -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Trạng Thái Đơn Hàng</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="order-id-search" class="form-label">ID Đơn Hàng</label>
+                                    <input type="text" class="form-control" id="order-id-search" placeholder="Nhập ID đơn hàng (không bắt buộc)">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="payment-id-search" class="form-label">ID Thanh Toán</label>
+                                    <input type="text" class="form-control" id="payment-id-search" placeholder="Nhập ID thanh toán (PAY-...)">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="shipping-id-search" class="form-label">ID Vận Chuyển</label>
+                                    <input type="text" class="form-control" id="shipping-id-search" placeholder="Nhập ID vận chuyển (SHP-...)">
+                                </div>
+                            </div>
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-3">
+                                <button class="btn btn-primary" id="check-order">
+                                    <i data-feather="search"></i> Kiểm Tra Đơn Hàng
+                                </button>
+                            </div>
+                            <div id="order-details">
+                                <div class="text-center py-5">
+                                    <i data-feather="package" style="width: 48px; height: 48px;"></i>
+                                    <p class="mt-3">Nhập ID thanh toán hoặc ID vận chuyển để kiểm tra thông tin đơn hàng</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Product Modal -->
+    <div class="modal fade" id="addProductModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Thêm Sản Phẩm Mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-product-form">
+                        <div class="mb-3">
+                            <label for="product-name" class="form-label">Tên Sản Phẩm</label>
+                            <input type="text" class="form-control" id="product-name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="product-price" class="form-label">Giá</label>
+                            <input type="number" class="form-control" id="product-price" min="1000" step="1000" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="product-stock" class="form-label">Số Lượng Tồn Kho</label>
+                            <input type="number" class="form-control" id="product-stock" min="1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="product-description" class="form-label">Mô Tả</label>
+                            <textarea class="form-control" id="product-description" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" id="submit-product">Lưu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/main.js"></script>
+    <script>
+        feather.replace();
+    </script>
+</body>
+</html>
